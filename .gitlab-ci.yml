@@ -1,0 +1,57 @@
+image: node:18.19.1
+
+stages:
+  - build
+  - deploy
+
+variables:
+  PROD_SERVER: 10.100.101.18
+  DEV_SERVER: 10.100.101.19
+  DEPLOY_DIRECTORY: /var/www/pmt
+
+before_script:
+  - eval "$(ssh-agent -s)"
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan -t rsa $PROD_SERVER >> ~/.ssh/known_hosts
+  - ssh-keyscan -t rsa $DEV_SERVER >> ~/.ssh/known_hosts
+  - set +x
+
+cache:
+  paths:
+    - node_modules/
+
+build_dev:
+  stage: build
+  script:
+    - npm install
+    - ng build --configuration=development
+  artifacts:
+    paths:
+      - dist/
+
+deploy_dev:
+  stage: deploy
+  script:
+    - ssh deployuser@$DEV_SERVER "sudo rm -rf $DEPLOY_DIRECTORY/*"
+    - scp -r dist/apollo-ng/* deployuser@$DEV_SERVER:$DEPLOY_DIRECTORY
+  only:
+    - develop
+
+build_prod:
+  stage: build
+  script:
+    - npm install
+    - ng build --configuration=production
+  artifacts:
+    paths:
+      - dist/
+
+deploy_prod:
+  stage: deploy
+  script:
+    - ssh deployuser@$PROD_SERVER "sudo rm -rf $DEPLOY_DIRECTORY/*"
+    - scp -r dist/apollo-ng/* deployuser@$PROD_SERVER:$DEPLOY_DIRECTORY
+  only:
+    - main

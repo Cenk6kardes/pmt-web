@@ -1,0 +1,37 @@
+:host ::ng-deep {
+  .p-steps-title {
+    display: block;
+    position: absolute;
+    bottom: 40px;
+  }
+
+  .p-steps .p-steps-item:before {
+    margin-top: 0;
+  }
+
+  .p-steps .p-steps-item.p-highlight .p-steps-number {
+    background: #eef2ff;
+    color: #4338ca;
+  }
+}
+
+.step {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.stepper {
+  padding-top: 40px;
+}
+
+.steps-container {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.step-item {
+  text-align: center;
+}

@@ -1,0 +1,330 @@
+<div class="grid">
+  <div class="col-12 card p-4">
+    <div class="flex justify-content-between px-4 mb-4 border-bottom-2">
+      <h2>
+        {{
+          goalStatusForm.data.performanceEvaluationDetails.performanceSubject
+        }}
+      </h2>
+      <span>
+        <p-dropdown
+          [options]="statusList"
+          [(ngModel)]="goalStatusForm.pagePeriodStatusId"
+          placeholder="Statü"
+        ></p-dropdown>
+        <p-button
+          class="save-button ml-1"
+          label="Kaydet"
+          (click)="onSubmit()"
+          [disabled]="
+            !goalStatusForm?.pagePeriodStatusId ||
+            !isAllRatiosAreSet ||
+            totalRatio !== 100
+          "
+        ></p-button>
+      </span>
+    </div>
+
+    <div class="col-12 stepper">
+      <p-steps [model]="steps" [activeIndex]="stepperActiveIndex" [readonly]="true" styleClass="px-3"/>
+      <div class="steps-container mb-4 px-3">
+        <div *ngFor="let step of steps; let i = index" class="step-item">
+          <small>{{ step.startDate | date:'dd/MM/yyyy': "0000" }}</small>
+          <br>
+          <small>{{ step.endDate | date:'dd/MM/yyyy': "0000" }}</small>
+        </div>
+      </div>
+    
+      <div class="col-12">
+        <p-accordion>
+          <p-accordionTab header="Yönetici Notu">
+            <div class="flex justify-content-center">
+              <textarea pInputTextarea [(ngModel)]="statusComment" class="w-full" cols="70">
+                      </textarea>
+            </div>
+          </p-accordionTab>
+        </p-accordion>
+      </div>
+
+    <div class="col-12">
+      <p-table
+        #dt
+        [columns]="selectedColumns"
+        [value]="goalStatusForm.data?.questionList || []"
+        [(selection)]="selectedRecords"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        responsiveLayout="scroll"
+        [rows]="10"
+        [globalFilterFields]="globalFilterFields"
+        [paginator]="false && goalStatusForm.data?.questionList.length > 0"
+        [showCurrentPageReport]="goalStatusForm.data?.questionList.length > 0"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        paginatorPositon="both"
+        currentPageReportTemplate="
+          Toplam {totalRecords} kayıt içerisinden {first} ve {last} arası gösteriliyor
+        "
+        [rowHover]="true"
+        dataKey="questionId"
+        [loading]="loading"
+        (onPage)="onPage()"
+        [styleClass]="'p-datatable-lg p-datatable-gridlines'"
+        [rowSelectable]="isRowSelectable"
+      >
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-top justify-content-between flex-wrap">
+            <h4 class="font-bold">{{ goalStatusForm.data.performanceEvaluationDetails.performanceSubject }} Listesi</h4>
+            <!-- <span
+              *ngIf="totalRatio !== 100"
+              [ngClass]="{ 'text-yellow-500': totalRatio < 100, 'text-red-500': totalRatio > 100 }">
+              Oranların toplamı 100 olmalıdır! [Toplam: {{ totalRatio }}]
+            </span> -->
+          </div>
+
+          <div
+            class="flex align-items-center justify-content-between flex-wrap mt-4"
+          >
+            <div class="flex">
+              <p-button
+                icon="pi pi-plus"
+                [styleClass]="'p-button-success mr-2'"
+                (click)="addNewGoal()"
+              ></p-button>
+
+              <button
+                type="button"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-danger mr-2"
+                [disabled]="selectedRecords.length === 0"
+                (click)="deleteGoal()"
+              ></button>
+            </div>
+
+            <div class="flex align-items-center flex-wrap">
+              <span class="p-input-icon-left w-auto mr-2">
+                <i class="pi pi-search"></i>
+                <input
+                  pInputText
+                  type="text"
+                  (input)="
+                    dt.filterGlobal($any($event.target).value, 'contains')
+                  "
+                  placeholder="Ara..."
+                />
+              </span>
+
+              <p-button icon="pi pi-filter-slash" (click)="dt.clear()"></p-button>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th style="width: 4rem">
+              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+              {{ col.field === 'title' ? goalStatusForm.data.performanceEvaluationDetails.performanceSubject : col.header }}
+              <p-sortIcon [field]="col.field"></p-sortIcon>
+              <p-columnFilter
+                [type]="col.field === 'ratio' ? 'numeric' : 'text'"
+                [field]="col.field"
+                display="menu"
+              ></p-columnFilter>
+            </th>
+            <th [style.width.px]="75">İşlemler</th>
+          </tr>
+        </ng-template>
+        <ng-template
+          pTemplate="body"
+          let-rowData
+          let-columns="columns"
+          let-rowIndex="rowIndex"
+        >
+          <tr>
+            <td>
+              <p-tableCheckbox
+                [value]="rowData"
+                [disabled]="rowData.questionTypeId === 1"
+                (click)="warnAboutIsNotSelectable(rowData.questionTypeId)"
+              ></p-tableCheckbox>
+            </td>
+            <td *ngFor="let col of columns">
+              {{ (col.field === 'ratio' ? '%' : '') + rowData[col.field] }}
+            </td>
+            <td [style.width.px]="75">
+              <div class="flex justify-content-center">
+                <p-button
+                  icon="pi pi-pencil"
+                  [styleClass]="
+                    'p-button-rounded p-button-icon-only p-button-text p-button-sm'
+                  "
+                  (click)="editGoal(rowData, rowIndex)"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="summary">
+          <div class="flex align-items-center justify-content-between">
+            <span>
+              {{
+                goalStatusForm?.data?.questionList
+                  ? goalStatusForm.data?.questionList.length
+                  : 0
+              }}
+              {{ performanceSubject }} bulunmaktadır.</span
+            >
+            <span [ngClass]="{
+                            'text-yellow-500': totalRatio < 100,
+                            'text-red-500': totalRatio > 100
+                          }">{{ performanceSubject }} ağırlık toplamı: {{ totalRatio }}</span
+            >
+          </div>
+        </ng-template>
+        <ng-template pTemplate="emptymessage" let-columns>
+          <tr>
+            <td [attr.colspan]="columns.length + 2">Kayıt bulunamadı.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  class="p-fluid"
+  [style]="{ width: '50vw' }"
+  [(visible)]="editDialogVisible"
+  [maximizable]="true"
+  [header]="editDialogHeader"
+>
+  <ng-template pTemplate="content">
+    <form [formGroup]="goalForm">
+      <div class="grid m-0 p-1">
+        <div class="col-12">
+          <label htmlFor="ratio">Oran</label>
+          <p-inputNumber
+            formControlName="ratio"
+            inputId="ratio"
+            prefix="%"
+            styleClass="w-full"
+            [min]="1"
+            [max]="100"
+          >
+          </p-inputNumber>
+          <span
+            *ngIf="
+              (goalForm.get('ratio')?.dirty ||
+                goalForm.get('ratio')?.touched) &&
+              goalForm.get('ratio')?.errors &&
+              goalForm.get('ratio')?.hasError('required')
+            "
+            class="text-red-500"
+          >
+            Zorunlu alandır!
+          </span>
+        </div>
+
+        <div class="col-12">
+          <p-dropdown
+            [options]="goalStatusForm.data.selectionCategory"
+            formControlName="categoryId"
+            optionLabel="title"
+            optionValue="id"
+            [showClear]="true"
+            [placeholder]="
+              isNaN(+goalForm.get('categoryId')?.value)
+                ? goalForm.get('categoryId')?.value
+                : 'Select a Category'
+            "
+          ></p-dropdown>
+          <span
+            *ngIf="
+              (goalForm.get('categoryId')?.dirty ||
+                goalForm.get('categoryId')?.touched) &&
+              goalForm.get('categoryId')?.errors &&
+              goalForm.get('categoryId')?.hasError('required')
+            "
+            class="text-red-500"
+          >
+            Zorunlu alandır!
+          </span>
+        </div>
+
+        <div class="col-12">
+          <label htmlFor="title">{{ performanceSubject }}</label>
+          <textarea
+            id="title"
+            pInputTextarea
+            [rows]="20"
+            [cols]="30"
+            [autoResize]="true"
+            class="w-full"
+            formControlName="title"
+          >
+          </textarea>
+          <span
+            *ngIf="
+              (goalForm.get('title')?.dirty ||
+                goalForm.get('title')?.touched) &&
+              goalForm.get('title')?.errors &&
+              goalForm.get('title')?.hasError('required')
+            "
+            class="text-red-500"
+          >
+            Zorunlu alandır!
+          </span>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Hayır"
+      icon="pi pi-times"
+      [styleClass]="'p-button-text'"
+      (click)="editDialogVisible = false"
+    ></p-button>
+    <p-button
+      label="Kaydet"
+      icon="pi pi-check"
+      [styleClass]="'p-button-text'"
+      (click)="onUpdateGoal()"
+      [disabled]="!goalForm.valid"
+    ></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="deleteDialogVisible"
+  [header]="deleteDialogHeader"
+  [modal]="true"
+  [style.width.px]="450"
+>
+  <div class="flex align-items-center justify-content-center">
+    <i class="pi pi-exclamation-triangle text-3xl mr-3"></i>
+    <ul class="w-full">
+      <li *ngFor="let record of selectedRecords">
+        <strong>{{ performanceSubject }}: </strong> {{ record.title }}
+      </li>
+    </ul>
+  </div>
+
+  <span class="block"> seçili {{ performanceSubject }}leri silmek istediğinize emin misiniz?</span>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="İptal Et"
+      icon="pi pi-times"
+      [styleClass]="'p-button-text'"
+      (click)="deleteDialogVisible = false"
+    ></p-button>
+    <p-button
+      label="Evet"
+      icon="pi pi-check"
+      [styleClass]="'p-button-text'"
+      (click)="confirmDelete()"
+    ></p-button>
+  </ng-template>
+</p-dialog>

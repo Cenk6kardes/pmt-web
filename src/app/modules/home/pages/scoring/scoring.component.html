@@ -1,0 +1,114 @@
+<div class="grid">
+  <div class="col-12 card p-4">
+    <div class="px-4 pb-2 mb-4 flex grid-nogutter justify-content-between border-bottom-2">
+      <div class="col-6">
+        <h2 style="font-weight: bold">{{ title }} Değerlendirme</h2>
+      </div>
+      <div>
+        <p-header style="margin-right: 10px; font-weight: bold">Durum</p-header>
+        <p-dropdown [options]="selectionStatuses" [(ngModel)]="selectedStatus" optionLabel="title" optionValue="id"
+          placeholder="Durum"></p-dropdown>
+        <p-button class="ml-2" label="Kaydet" (click)="save()"></p-button>
+        <p-overlayPanel #op class="ml-2">
+          <p-listbox [options]="employeeList" [(ngModel)]="selectedList" [filter]="true"></p-listbox>
+        </p-overlayPanel>
+        <p-button (click)="op.toggle($event)" icon="pi pi-user" severity="info"></p-button>
+      </div>
+    </div>
+    <div *ngFor="let question of questions; let i = index" class="col-12 card p-4">
+      <div class="flex flex-column gap-0">
+        <nav class="c-breadcrumb">
+          <ol class="c-breadcrumb-list">
+            <li>
+              <a class="c-menuitem-link" target="undefined" tabindex="0">
+                <span class="c-menuitem-text">{{ question.questionCategory }}</span>
+              </a>
+            </li>
+            <li class="c-menuitem-separator">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"
+                class="p-icon" aria-hidden="true">
+                <path
+                  d="M4.38708 13C4.28408 13.0005 4.18203 12.9804 4.08691 12.9409C3.99178 12.9014 3.9055 12.8433 3.83313 12.7701C3.68634 12.6231 3.60388 12.4238 3.60388 12.2161C3.60388 12.0084 3.68634 11.8091 3.83313 11.6622L8.50507 6.99022L3.83313 2.31827C3.69467 2.16968 3.61928 1.97313 3.62287 1.77005C3.62645 1.56698 3.70872 1.37322 3.85234 1.22959C3.99596 1.08597 4.18972 1.00371 4.3928 1.00012C4.59588 0.996539 4.79242 1.07192 4.94102 1.21039L10.1669 6.43628C10.3137 6.58325 10.3962 6.78249 10.3962 6.99022C10.3962 7.19795 10.3137 7.39718 10.1669 7.54416L4.94102 12.7701C4.86865 12.8433 4.78237 12.9014 4.68724 12.9409C4.59212 12.9804 4.49007 13.0005 4.38708 13Z"
+                  fill="currentColor"></path>
+              </svg>
+            </li>
+            <li>
+              <a class="c-menuitem-link" target="undefined" tabindex="1">
+                <span class="c-menuitem-text">{{ question.questionMainCategory }}</span>
+              </a>
+            </li>
+            <li class="c-menuitem-separator">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"
+                class="p-icon" aria-hidden="true">
+                <path
+                  d="M4.38708 13C4.28408 13.0005 4.18203 12.9804 4.08691 12.9409C3.99178 12.9014 3.9055 12.8433 3.83313 12.7701C3.68634 12.6231 3.60388 12.4238 3.60388 12.2161C3.60388 12.0084 3.68634 11.8091 3.83313 11.6622L8.50507 6.99022L3.83313 2.31827C3.69467 2.16968 3.61928 1.97313 3.62287 1.77005C3.62645 1.56698 3.70872 1.37322 3.85234 1.22959C3.99596 1.08597 4.18972 1.00371 4.3928 1.00012C4.59588 0.996539 4.79242 1.07192 4.94102 1.21039L10.1669 6.43628C10.3137 6.58325 10.3962 6.78249 10.3962 6.99022C10.3962 7.19795 10.3137 7.39718 10.1669 7.54416L4.94102 12.7701C4.86865 12.8433 4.78237 12.9014 4.68724 12.9409C4.59212 12.9804 4.49007 13.0005 4.38708 13Z"
+                  fill="currentColor"></path>
+              </svg>
+            </li>
+            <li>
+              <a class="c-menuitem-link" target="undefined" tabindex="2">
+                <span class="c-menuitem-text">{{ question.questionSubCategory }}</span>
+              </a>
+            </li>
+            <li class="c-menuitem-separator">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"
+                class="p-icon" aria-hidden="true">
+                <path
+                  d="M4.38708 13C4.28408 13.0005 4.18203 12.9804 4.08691 12.9409C3.99178 12.9014 3.9055 12.8433 3.83313 12.7701C3.68634 12.6231 3.60388 12.4238 3.60388 12.2161C3.60388 12.0084 3.68634 11.8091 3.83313 11.6622L8.50507 6.99022L3.83313 2.31827C3.69467 2.16968 3.61928 1.97313 3.62287 1.77005C3.62645 1.56698 3.70872 1.37322 3.85234 1.22959C3.99596 1.08597 4.18972 1.00371 4.3928 1.00012C4.59588 0.996539 4.79242 1.07192 4.94102 1.21039L10.1669 6.43628C10.3137 6.58325 10.3962 6.78249 10.3962 6.99022C10.3962 7.19795 10.3137 7.39718 10.1669 7.54416L4.94102 12.7701C4.86865 12.8433 4.78237 12.9014 4.68724 12.9409C4.59212 12.9804 4.49007 13.0005 4.38708 13Z"
+                  fill="currentColor"></path>
+              </svg>
+            </li>
+            <li>
+              <a class="c-menuitem-link" target="undefined" tabindex="3">
+                <span class="c-menuitem-text font-bold">{{ title }} {{ i + 1 }}</span>
+              </a>
+            </li>
+            <li>
+              <a class="c-menuitem-link " target="undefined" tabindex="3">
+                <span class="c-menuitem-text font-bold">%{{ question.ratio }}</span>
+              </a>
+            </li>
+  
+          </ol>
+        </nav>
+  
+        <p class="pt-4 pb-2">{{ question.questionTitle }}</p>
+  
+        <div class="grid px-0 pt-2 pb-3">
+          <div class="sm:col-12 sm:flex-order-2 lg:col-9 lg:flex-order-1">
+            <label [for]="'textarea' + i">Yorum</label>
+            <textarea pInputTextarea [id]="'textarea' + i" [(ngModel)]="question.note"
+              class="w-full h-full mt-2"></textarea>
+          </div>
+          <div scoreHighlight class="sm:col-12 sm:flex-order-1 lg:col-3 lg:flex-order-2">
+            <label [for]="'listbox' + i">Değerlendirme</label>
+            <p-listbox [id]="'listbox' + i" [options]="question.scaleType.values" optionLabel="title" optionValue="id"
+              (onClick)="listBoxOnSelect($event)" [(ngModel)]="questions[i].questionScaleTypeValueId" styleClass="w-full h-full mt-2">
+              <ng-template let-scaleType pTemplate="item">
+                <ng-container>
+                  {{ scaleType.title }} <span [attr.data-background-color]="scaleType.colorCode"></span>
+                </ng-container> <!-- To leave content as clear otherwise span generated inside the "li" element -->
+              </ng-template>
+            </p-listbox>
+          </div>
+        </div>
+  
+        <div *ngIf="question.managerNotes.length > 0" class="p-4">
+          <span class="text-black-alpha-50 font-bold">Yönetici Değerlendirmesi</span>
+          <div>
+            <p-tabView>
+              <p-tabPanel *ngFor="let note of question.managerNotes">
+                <ng-template pTemplate="header">
+                  <span class="text-black-alpha-50">{{ note.fullName }}</span>
+                  <span class="color-indicator ml-2" [ngStyle]="{ 'background-color': note.scaleTypeColor }"></span>
+                </ng-template>
+  
+                <p>{{ note.note }}</p>
+              </p-tabPanel>
+            </p-tabView>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

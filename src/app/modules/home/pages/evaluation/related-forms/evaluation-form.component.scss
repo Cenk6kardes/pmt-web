@@ -1,0 +1,17 @@
+::ng-deep #add-new-tab-button {
+  .p-button {
+    height: 25px !important;
+  }
+}
+
+::ng-deep .tab-label {
+  font-size: 17px;
+}
+
+.alignQuestions {
+  vertical-align: text-top;
+}
+
+.custom-style {
+  text-decoration: line-through;
+}

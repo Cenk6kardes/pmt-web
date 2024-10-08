@@ -1,0 +1,41 @@
+<div class="layout-topbar">
+  <div class="topbar-start">
+    <button #menubutton type="button" class="topbar-menubutton p-link p-trigger" (click)="onMenuButtonClick()">
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <app-breadcrumb class="topbar-breadcrumb"></app-breadcrumb>
+  </div>
+
+  <div class="topbar-end">
+    <ul class="topbar-menu">
+      <p-calendar *ngIf="!isProd && (changedUserEmail || (isAsUserDropdownVisible | async))" styleClass="mx-4"
+        dateFormat="dd.mm.yy" placeholder="Bugün Tarihi" [showIcon]="true" (onSelect)="setTodayDate($event)"
+        [readonlyInput]="true" [(ngModel)]="todayDate" [showButtonBar]="true" (onClearClick)="clearTodayDate()"/>
+
+      <p-dropdown *ngIf="!isProd && (changedUserEmail || (isAsUserDropdownVisible | async))" [options]="users"
+        optionLabel="email" optionValue="value" placeholder="Kullanıcı Değiştir" styleClass="mx-4"
+        [(ngModel)]="activeUserEmail" (onChange)="changeActiveUser($event.value)"></p-dropdown>
+      <p-dropdown [options]="languages" [(ngModel)]="activeLanguage" optionLabel="name" styleClass="mx-4"
+        (onChange)="changeActiveLanguageHandler($event.value.code)">
+        <ng-template pTemplate="selectedItem">
+          <div class="country-item country-item-value" *ngIf="activeLanguage">
+            <img src="assets/flags/flag_placeholder.png" [class]="'flag flag-' + activeLanguage.code.toLowerCase()"
+              alt="" />
+          </div>
+        </ng-template>
+
+        <ng-template let-language pTemplate="item">
+          <div class="country-item">
+            <img src="assets/flags/flag_placeholder.png" [class]="'flag flag-' + language.code.toLowerCase()" alt="" />
+            <span class="ml-2">{{ language.name }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+      <a class="mr-2 text-primary" *ngIf="isAuthenticated">{{ activeUser }}</a>
+
+      <button pButton pRipple type="button" style="margin-right: 10px" class="mr-2" label="Çıkış Yap"
+        (click)="logout()"></button>
+    </ul>
+  </div>
+</div>

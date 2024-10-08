@@ -1,0 +1,404 @@
+<div class="grid">
+  <div class="col-12 card p-4">
+    <div class="flex justify-content-between px-4 mb-4 border-bottom-2">
+      <h2>Performans Değerlendirme</h2>
+      <span>
+        <small id="status-help" class="ml-2 text-red-500">
+          {{ (statusDropdownEl?.touched || isSubmitted) && statusDropdownEl?.errors?.['required'] ? 'Zorunlu alan' : '' }}
+        </small>
+        <p-dropdown
+          #statusDropdownEl="ngModel"
+          [(ngModel)]="status"
+          [options]="statusDropdown"
+          optionLabel="title"
+          optionValue="id"
+          placeholder="Seçiniz"
+          [required]="true"
+        ></p-dropdown>
+        <p-button
+          class="save-button ml-2"
+          label="Kaydet"
+          (click)="saveCrew()"
+        ></p-button>
+      </span>
+    </div>
+
+    <div class="col-12 grid-nogutter">
+      <p-tabView [(activeIndex)]="activeIndex" (onChange)="tabChange($event)">
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <span class="tab-label">{{ evaluation.evaluationSection.title }}</span>
+          </ng-template>
+
+          <ng-template pTemplate="content">
+            <form (ngSubmit)="onNext(true)">
+              <div class="grid align-items-center">
+                <div class="col-12 md:col-3">
+                  <label class="font-bold">Değerlendirme Adı :</label>
+                </div>
+                <div class="col-12 md:col-6">
+                  <input pInputText #title="ngModel" name="title" [(ngModel)]="evaluation.evaluationSection.title" class="w-full" required />
+                  <small id="title-help" class="text-red-500">{{ title?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                </div>
+                <div class="col-12 md:col-3"></div>
+
+                <div class="col-12 md:col-3">
+                  <label class="font-bold">Değerlendirme Dönemi :</label>
+                </div>
+                <div class="col-12 md:col-3">
+                  <div class="flex flex-column gap-2">
+                    <label htmlFor="evaluationStartDate" class="dateTitle">Başlangıç Tarihi</label>
+                    <p-calendar
+                      id="evaluationStartDate"
+                      #startDate="ngModel"
+                      name="startDate"
+                      [ngModel]="evaluation.evaluationSection.startDate | date:'dd.MM.yyyy':'+0300'"
+                      (ngModelChange)="dateUpdate($event, 'startDate', evaluation.evaluationSection)"
+                      (keydown)="blockDateInput($event)"
+                      dateFormat="dd.mm.yy"
+                      [maxDate]="evaluation.evaluationSection.endDate | dayShift:-1"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                      [required]="true"
+                    ></p-calendar>
+                    <small id="evaluationStartDate-help" class="text-red-500">{{ startDate?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-3">
+                  <div class="flex flex-column gap-2">
+                    <label htmlFor="evaluationEndDate" class="dateTitle">Bitiş Tarihi</label>
+                    <p-calendar
+                      id="evaluationEndDate"
+                      #endDate="ngModel"
+                      name="endDate"
+                      [ngModel]="evaluation.evaluationSection.endDate | date:'dd.MM.yyyy':'+0300'"
+                      (ngModelChange)="dateUpdate($event, 'endDate', evaluation.evaluationSection)"
+                      (keydown)="blockDateInput($event)"
+                      dateFormat="dd.mm.yy"
+                      [minDate]="evaluation.evaluationSection.startDate | dayShift:1"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                      [required]="true"
+                    ></p-calendar>
+                    <small id="evaluationEndDate-help" class="text-red-500">{{ endDate?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-3"></div>
+
+                <div class="col-12 md:col-3">
+                  <label class="font-bold">Final Değerlendirme Skalası :</label>
+                </div>
+                <div class="col-12 md:col-6">
+                  <p-dropdown
+                    id="finalScoreScaleType"
+                    #finalScoreScaleType="ngModel"
+                    name="finalScoreScaleType"
+                    [(ngModel)]="evaluation.evaluationSection.finalScoreScaleTypeId"
+                    [options]="scaleTypes"
+                    [required]="true"
+                    optionLabel="title"
+                    optionValue="scaleTypeId"
+                    placeholder="Seçiniz"
+                    styleClass="w-full"
+                  ></p-dropdown>
+                  <small id="finalScoreScaleType-help" class="text-red-500">{{ isSubmitted && (finalScoreScaleType.value === 0 || finalScoreScaleType?.errors?.['required']) ? 'Zorunlu alan' : '' }}</small>
+                </div>
+              </div>
+            </form>
+          </ng-template>
+        </p-tabPanel>
+      
+        <p-tabPanel *ngFor="let tab of tabs" [header]="tab.title">
+          <ng-template pTemplate="header"> 
+            <span class="tab-label">{{ tab.title }}&nbsp;</span>
+            <i (click)="deleteSelectedTab(tab.tabNumber)" class="pi pi-times-circle"></i>
+          </ng-template>
+          <ng-template pTemplate="content">
+            <h4 class="font-bold">Performans Konusu</h4>
+
+            <div class="grid align-items-center pl-3">
+              <div class="col-12 md:col-3">
+                <label class="font-bold">Şablon :</label>
+              </div>
+              <div class="col-12 md:col-6">
+                <p-dropdown 
+                  *ngIf="performanceTitles && performanceTitles.length > 0"
+                  #performanceTemplateSelectEl
+                  name="performanceTemplates"
+                  (onChange)="templateRenderer($event, performanceTemplateSelectEl)"
+                  [options]="performanceTitles"
+                  optionLabel="title"
+                  placeholder="Şablon Seçiniz"
+                  styleClass="w-full"
+                ></p-dropdown>
+              </div>
+
+              <p-divider type="dashed" class="w-8 col-offset-2"></p-divider>
+            </div>
+
+            <div class="grid align-items-center pl-3" *ngIf="tabContents[templateIndex]">
+              <div class="col-12 md:col-3">
+                <label class="font-bold">Oran :</label>
+              </div>
+              <div class="col-12 md:col-6">
+                <div class="p-inputgroup">
+                  <span class="p-inputgroup-addon">Şablon Ağırlığı</span>
+                  <p-inputNumber
+                    #oran="ngModel"
+                    name="oran"
+                    [(ngModel)]="tabContents[templateIndex].performanceDefaultRatio"
+                    (onInput)="ratioCalculator()"
+                    (input)="ratioChange($event)"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                    [required]="true"
+                  ></p-inputNumber>
+                  <span class="p-inputgroup-addon">
+                      <i class="pi pi-percentage"></i>
+                  </span>
+                </div>
+                <small id="oran-help" class="text-red-500">{{ oran?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                <small [id]="'template-' + templateIndex + '-help'" class="text-red-500">{{ (!oran?.errors?.['required'] && isDefaultRatioNotHundred) ? 'Şablon ağırlık oranlarının toplamı 100 olmalıdır!' : '' }}</small>
+              </div>
+            </div>
+
+            <div *ngIf="tabContents[templateIndex]" class="grid align-items-center pl-3">
+              <ng-container *ngFor="let performancePeriod of tabContents[templateIndex].periods; let i = index; let first = first; let last = last">
+                <div class="col-12 md:col-3">
+                  <label class="font-bold">{{ performancePeriod.title }} :</label>
+                </div>
+                <div class="col-12 md:col-3">
+                  <div class="flex flex-column gap-2">
+                    <label htmlFor="startDate" class="dateTitle">Başlangıç Tarihi</label>
+                    <p-calendar
+                      id="startDate"
+                      #performancePeriodStartDate="ngModel"
+                      [ngModel]="performancePeriod.startDate | date:'dd.MM.yyyy':'+0300'"
+                      (ngModelChange)="dateUpdate($event, 'startDate', tabContents[templateIndex].periods[i])"
+                      (keydown)="blockDateInput($event)"
+                      dateFormat="dd.mm.yy"
+                      [minDate]="first ? (evaluation.evaluationSection.startDate | dayShift) : (tabContents[templateIndex].periods[i - 1].endDate | dayShift:1)"
+                      [maxDate]="tabContents[templateIndex].periods[i].endDate | dayShift:-1"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                      [disabled]="!performancePeriod.isMandatory"
+                      [required]="true"
+                    ></p-calendar>
+                    <small id="startDate-help" class="text-red-500">{{ performancePeriodStartDate?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-3">
+                  <div class="flex flex-column gap-2">
+                    <label htmlFor="endDate" class="dateTitle">Bitiş Tarihi</label>
+                    <p-calendar
+                      id="endDate"
+                      #performancePeriodEndDate="ngModel"
+                      [ngModel]="performancePeriod.endDate | date:'dd.MM.yyyy':'+0300'"
+                      (ngModelChange)="dateUpdate($event, 'endDate', tabContents[templateIndex].periods[i])"
+                      (keydown)="blockDateInput($event)"
+                      dateFormat="dd.mm.yy"
+                      [minDate]="tabContents[templateIndex].periods[i].startDate | dayShift:1"
+                      [maxDate]="last ? (evaluation.evaluationSection.endDate | dayShift) : (tabContents[templateIndex].periods[i + 1].startDate | dayShift:-1)"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                      [disabled]="!performancePeriod.isMandatory"
+                      [required]="true"
+                    ></p-calendar>
+                    <small id="endDate-help" class="text-red-500">{{ performancePeriodEndDate?.errors?.['required'] ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-3 -mt-5 md:mt-2">
+                  <p-inputSwitch [(ngModel)]="performancePeriod.isMandatory"></p-inputSwitch>
+                </div>
+              </ng-container>
+            </div>
+
+            <div *ngIf="tabContents[templateIndex]">
+              <div *ngFor="let questionMainCategoryTitle of getQuestions()">
+                <p-panel [toggleable]="true">
+                  <ng-template pTemplate="header">
+                    <div class="flex align-items-center gap-2">
+                        <span class="font-bold">{{ questionMainCategoryTitle }}</span>
+                        <span pTooltip="Dahil/Toplam soru sayısı"> ({{ getIncludedQuestionsCount(templateIndex, questionMainCategoryTitle) }}/{{questionMap[questionMainCategoryTitle].length}})</span>
+                        <span *ngIf="sectionSums[questionMainCategoryTitle] > 100" style="color: red;">Soru ağırlık oranlarının toplamı 100'ü aşıyor! [Toplam: {{ sectionSums[questionMainCategoryTitle] }}]</span>
+                        <span *ngIf="sectionSums[questionMainCategoryTitle] < 100" style="color: orange;">Soru ağırlık oranlarının toplamı 100 olmalı! [Toplam: {{ sectionSums[questionMainCategoryTitle] }}]</span>
+                    </div>
+                  </ng-template>
+                  <div *ngFor="let question of questionMap[questionMainCategoryTitle]; last as isLast;">
+                    <div *ngIf="tabContents[templateIndex].questions[question]">
+                      <div class="grid">
+                        <div class="col-12">
+                          <span style="font-style: italic;"
+                            [ngClass]="{ 'custom-style': tabContents[templateIndex].questions[question].isExcluded }">
+                            {{tabContents[templateIndex].questions[question].questionMainCategoryTitle}} /
+                            {{tabContents[templateIndex].questions[question].questionCategoryTitle}} /
+                            {{tabContents[templateIndex].questions[question].questionSubCategoryTitle}}
+                          </span>
+                          <p [ngClass]="{ 'custom-style': tabContents[templateIndex].questions[question].isExcluded }">
+                            {{tabContents[templateIndex].questions[question].questionTitle}}
+                          </p>
+                        </div>
+                        <div class="col-12 md:col-4">
+                          <p-dropdown
+                            [options]="scaleTypes"
+                            optionLabel="title"
+                            [ngClass]="{ 'custom-style': tabContents[templateIndex].questions[question].isExcluded }"
+                            styleClass="w-full"
+                          ></p-dropdown>
+                        </div>
+                        <div class="col-12 md:col-6">
+                          <div class="p-inputgroup">
+                            <span class="p-inputgroup-addon">Soru Ağırlığı</span>
+                            <p-inputNumber 
+                              *ngIf="tabContents[templateIndex]"
+                              [(ngModel)]="tabContents[templateIndex].questions[question].ratio"
+                              (onInput)="questionRatioCalculator(templateIndex)" 
+                              [maxFractionDigits]="2"
+                              styleClass="w-full"
+                              [ngClass]="{ 'custom-style': tabContents[templateIndex].questions[question].isExcluded }"
+                              [disabled]="tabContents[templateIndex].questions[question].isExcluded"
+                              [required]="true"
+                            ></p-inputNumber>
+                            <span class="p-inputgroup-addon">
+                                <i class="pi pi-percentage"></i>
+                            </span>
+                          </div>
+                          <small [id]="'t-' + templateIndex + '-q-' + question + '-help'" class="text-red-500">{{ !tabContents[templateIndex]?.questions[question]?.ratio ? 'Zorunlu alan' : '&nbsp;' }}</small>
+                        </div>
+                        <div class="col-12 md:col-2 -mt-5 md:mt-2">
+                          <p-inputSwitch 
+                            [ngModel]="!tabContents[templateIndex].questions[question].isExcluded"
+                            (ngModelChange)="tabContents[templateIndex].questions[question].isExcluded = $event"
+                            (onChange)="isQuestionIncluded($event, question)"
+                          ></p-inputSwitch>
+                        </div>
+                        <p-divider *ngIf="!isLast" class="col-2 py-0"></p-divider>
+                      </div>
+                    </div>
+                  </div>
+                </p-panel>
+              </div>
+            </div>
+
+            {{ tab.content }}
+          </ng-template>
+        </p-tabPanel>
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <p-button id="add-new-tab-button" icon="pi pi-plus" (click)="addNewTab()"></p-button>
+          </ng-template>
+        </p-tabPanel>
+
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <div class="flex justify-content-center align-items-center">
+              <label class="tab-label">Kitle</label>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="content">
+            <p-table #dt [columns]="selectedColumns" [value]="filteredDataSource" [tableStyle]="{ 'min-width': '50rem' }"
+              responsiveLayout="scroll" [rows]="10" [globalFilterFields]="globalFilterFields"
+              [paginator]="filteredDataSource.length > 0" [showCurrentPageReport]="filteredDataSource.length > 0"
+              [rowsPerPageOptions]="[10, 20, 30]" paginatorPositon="both" currentPageReportTemplate="
+              Toplam {totalRecords} kayıt içerisinden {first} ve {last} arası gösteriliyor
+              " [rowHover]="true" dataKey="id" [loading]="loading" (onPage)="onPage()"
+              [styleClass]="'p-datatable-lg p-datatable-gridlines'">
+              
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-end justify-content-between flex-wrap mt-4">
+                  <div>
+                    <p-multiSelect
+                      [options]="employeeFilterOptions"
+                      [(ngModel)]="filterSelection"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seçiniz"
+                      (onChange)="onFilterChange($event)">
+                    </p-multiSelect>
+                  </div>
+
+                  <div>
+                    <span class="p-input-icon-left w-auto mr-2">
+                      <i class="pi pi-search"></i>
+                      <input pInputText type="text" (input)="
+                          dt.filterGlobal($any($event.target).value, 'contains')
+                        " placeholder="Ara..." />
+                    </span>
+
+                    <p-button label="" icon="pi pi-filter-slash" (click)="dt.clear()"></p-button>
+                  </div>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header" let-columns>
+                <tr>
+                  <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+                    {{ col.header }}
+                    <p-sortIcon [field]="col.field" [hidden]="col.field !== 'period'"></p-sortIcon>
+                    <p-columnFilter type="text" [field]="col.field" display="menu"
+                      [hidden]="col.field !== 'period'"></p-columnFilter>
+                  </th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex" let-columns="columns">
+                <tr>
+                  <td *ngFor="let col of columns">
+                    <div *ngIf="
+                      col.field === 'fullName' ||
+                      col.field === 'level' ||
+                      col.field === 'directorship' ||
+                      col.field === 'department'
+                    ">
+                      {{ rowData[col.field] }}
+                    </div>
+                    <div *ngIf="col.field === 'identityNo'">
+                      <i class="pi pi-info-circle" pTooltip="{{ rowData[col.field] }}"></i>
+                    </div>
+                    <div *ngIf="col.field === getColumnFieldForTemplate()">
+                      <div class="flex align-items-center gap-1">
+                        <p-inputSwitch (onChange)="templateSwitch($event, rowData, col.templateId)" [ngModel]="!rowData.isTemplateExcluded?.[col.templateId]?.isDefaultExcluded" class="alignQuestions" [styleClass]="'mr-2 ml-2'"></p-inputSwitch>
+                        <p-dropdown
+                          [options]="rowData.templateOptionRoles[col.templateId]"
+                          optionLabel="title" styleClass="w-full" class="w-full" placeholder="Seçiniz"
+                          [ngModel]="rowData.templateRoles[col.templateId][0]"
+                        ></p-dropdown>
+                      </div>
+                    </div>
+                    <div *ngIf="col.field === 'exceptionalManagerId'">
+                      <p-dropdown
+                        #exceptionalManagerId="ngModel"
+                        [options]="reviewerData"
+                        appendTo="body"
+                        optionValue="id"
+                        [filter]="true"
+                        optionLabel="fullName" 
+                        [(ngModel)]="rowData[col.field]" 
+                        styleClass="w-full" 
+                        class="w-full"
+                        [showClear]="true"   
+                        placeholder="Seçiniz"
+                      ></p-dropdown>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="summary">
+                <div class="flex align-items-center justify-content-between">
+                  Toplamda {{ filteredDataSource ? filteredDataSource.length : 0 }} kişi
+                  bulunmaktadır.
+                </div>
+              </ng-template>
+              <ng-template pTemplate="emptymessage" let-columns>
+                <tr>
+                  <td [attr.colspan]="columns.length + 1">Kayıt bulunamadı.</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </ng-template>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </div>
+</div>

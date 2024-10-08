@@ -1,0 +1,93 @@
+<div class="grid">
+  <div class="col-12 card p-4">
+    <div class="col-12">
+      <p-table #dt [columns]="selectedColumns" [value]="dataSource" [tableStyle]="{ 'min-width': '50rem' }"
+        responsiveLayout="scroll" [rows]="10" [globalFilterFields]="globalFilterFields"
+        [paginator]="dataSource.length > 0" [showCurrentPageReport]="dataSource.length > 0"
+        [rowsPerPageOptions]="[10, 20, 30]" paginatorPositon="both" currentPageReportTemplate="
+          Toplam {totalRecords} kayıt içerisinden {first} ve {last} arası gösteriliyor
+        " [rowHover]="true" dataKey="id" [loading]="loading" (onPage)="onPage()"
+        [styleClass]="'p-datatable-lg p-datatable-gridlines'">
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between flex-wrap mt-4">
+            <h4 class="font-bold">Değerlendirme Listesi</h4>
+
+            <div class="flex align-items-center flex-wrap">
+              <span class="p-input-icon-left w-auto mr-2">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" (input)="
+                    dt.filterGlobal($any($event.target).value, 'contains')
+                  " placeholder="Ara..." />
+              </span>
+
+              <p-button label="" icon="pi pi-filter-slash" [styleClass]="'mr-2'"
+                (click)="dt.clear()"></p-button>
+              <p-button icon="pi pi-plus-circle" routerLink="/evaluation/new"></p-button>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+              {{ col.header }}
+              <p-sortIcon [field]="col.field"></p-sortIcon>
+              <p-columnFilter type="text" [field]="col.field" display="menu"></p-columnFilter>
+            </th>
+            <th>İşlemler</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+          <tr>
+            <td *ngFor="let col of columns">
+              <ng-container *ngIf="col.field !== 'completionRate' && col.field !== 'status'">
+                {{ col.field.includes('Date') ? (col.field === 'createdDate' ? (rowData[col.field] | date:'yyyy-MM-dd
+                HH:mm') : (rowData[col.field] | date:'yyyy-MM-dd')) : rowData[col.field] }}
+              </ng-container>
+
+              <span *ngIf="col.field === 'completionRate'" class="flex flex-column grid-nogutter">
+                <span><p-progressBar [value]="rowData[col.field] !== 0 ? rowData[col.field] : 5 "
+                    [showValue]="false"></p-progressBar></span>
+              </span>
+
+              <span *ngIf="col.field === 'status'" class="flex justify-content-center" >
+                <p-tag  [value]="rowData[col.field]" [severity]="getStatusColor(rowData['statusId'])" />
+              </span>
+            </td>
+            <td>
+              <div class="flex justify-content-start">
+                <p-button icon="pi pi-pencil" styleClass="p-button-rounded p-button-icon-only p-button-text p-button-sm"
+                  (click)="goToDetail(rowData.pageProcessId)"></p-button>
+                <div>
+                  <p-menu
+                    #menu
+                    [popup]="true"
+                    [model]="menuItems"
+                    [appendTo]="'body'"
+                  ></p-menu>
+                  <p-button
+                    *ngIf="rowData.menuStatuses.length > 0"
+                    icon="pi pi-ellipsis-v"
+                    styleClass="p-button-rounded p-button-icon-only p-button-text p-button-sm"
+                    (click)="menu.toggle($event);selectRow(rowData)"
+                  ></p-button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="summary">
+          <div class="flex align-items-center justify-content-between">
+            Toplamda {{ dataSource ? dataSource.length : 0 }} kayıt
+            bulunmaktadır.
+          </div>
+        </ng-template>
+        <ng-template pTemplate="emptymessage" let-columns>
+          <tr>
+            <td [attr.colspan]="columns.length + 2">Kayıt bulunamadı.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

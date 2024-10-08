@@ -1,0 +1,17 @@
+<div class="grid">
+    <div class="col-12 md:col-6">
+        <div class="flex flex-column">
+            <label htmlFor="date1">Date 1</label>
+            <p-calendar id="date1" [(ngModel)]="date1" [showIcon]="true"></p-calendar>
+        </div>
+    </div>
+    <div class="col-12 md:col-6">
+        <div class="flex flex-column">
+            <label htmlFor="date2">date 2</label>
+            <p-calendar id="date2" [(ngModel)]="date2" [showIcon]="true"></p-calendar>
+        </div>
+    </div>
+    <div class="col-12">
+        <p-button label="Güncelle" (click)="updateDates()"></p-button>
+    </div>
+</div>

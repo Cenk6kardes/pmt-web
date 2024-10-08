@@ -1,0 +1,11 @@
+:host {
+    ::ng-deep .p-progressbar {
+        height: 6px !important;
+    }
+
+    ::ng-deep .p-tag-value {
+        min-width: 65px;
+        font-size: 0.80rem;
+        text-align: center;
+    }
+}

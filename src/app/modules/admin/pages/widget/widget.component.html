@@ -1,0 +1,142 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card px-6 py-6">
+      <p-toast></p-toast>
+      <p-toolbar styleClass="mb-4">
+        <ng-template pTemplate="left">
+          <div class="my-2">
+            <button pButton pRipple label="" icon="pi pi-plus" class="p-button-success mr-2"
+              (click)="openNew()"></button>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="right">
+          <button pButton pRipple label="Export" icon="pi pi-upload" class="p-button-help"
+            (click)="dt.exportCSV()"></button>
+        </ng-template>
+      </p-toolbar>
+
+      <p-table #dt [value]="items" [columns]="cols" responsiveLayout="scroll" [rows]="10"
+        [globalFilterFields]="['id', 'title', 'cachingTime', 'query', 'widgetType']" [rows]="10" [paginator]="true"
+        [rowsPerPageOptions]="[10, 20, 30]" [showCurrentPageReport]="false"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [rowHover]="true"
+        [exportFilename]="'pmt_admin-' + pageHeader.replaceAll(' ', '_').toLocaleLowerCase()" [loading]="loading"
+        dataKey="id">
+        <ng-template pTemplate="caption">
+          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 class="m-0">{{ pageHeader }}</h5>
+            <span class="block mt-2 md:mt-0 p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Ara..."
+                class="w-full sm:w-auto" />
+            </span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of cols" [pSortableColumn]="col.field">
+              {{ col.header }} <p-sortIcon [field]="col.field"></p-sortIcon>
+            </th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr *ngIf="!item.isRemoved" [pSelectableRow]="item">
+            <td *ngFor="let col of cols">
+              <span class="p-column-title">{{ col.header }}</span>
+              <ng-container [ngSwitch]="col.field">
+                <span *ngSwitchCase="'query'">
+                  <textarea [autoResize]="true" [cols]="75" [rows]="8" [disabled]="true" pInputTextarea
+                    [innerHTML]="item[col.field]"></textarea>
+                </span>
+                <span *ngSwitchCase="'widgetType'">
+                  <ng-container [ngSwitch]="item[col.field]">
+                    <span *ngSwitchCase="'PieChart'">
+                      Dairesel Grafik
+                    </span>
+                    <span *ngSwitchCase="'BarChart'">
+                      Çubuk Grafik
+                    </span>
+                    <span *ngSwitchCase="'ListChart'">
+                      Liste Grafik
+                    </span>
+                  </ng-container>
+                </span>
+                <span *ngSwitchDefault>{{item[col.field]}}</span>
+              </ng-container>
+            </td>
+            <td>
+              <div class="flex">
+                <button pButton pRipple icon="pi pi-pencil"
+                  class="p-button-rounded p-button-icon-only p-button-text p-button-sm mr-2"
+                  (click)="editItem(item)"></button>
+                <button pButton pRipple icon="pi pi-trash"
+                  class="p-button-rounded p-button-icon-only p-button-text p-button-sm"
+                  (click)="deleteItem(item)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p-dialog (onHide)="hideDialog()" [(visible)]="itemDialog" [style]="{ width: '450px' }"
+      [header]="item.id ? 'Düzenle' : 'Oluştur'" [modal]="true" class="p-fluid">
+      <ng-template pTemplate="content">
+        <form [formGroup]="form">
+          <div *ngIf="item.id" class="field">
+            <label for="id">Id</label>
+            <p-inputNumber inputId="id" formControlName="id" name="id"></p-inputNumber>
+          </div>
+          <div class="field">
+            <label for="title">Sistem Adı</label>
+            <input type="text" placeholder="Sistem Adını Giriniz." pInputText id="title" name="title"
+              formControlName="title" [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('title')?.invalid }" />
+            <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('title')?.invalid">Bu alan gerekli.</small>
+          </div>
+          <div class="field">
+            <label for="widgetType">Grafik Türü</label>
+            <p-dropdown [appendTo]="'body'" [options]="widgetTypes" formControlName="widgetType" [optionLabel]="'label'"
+              [optionValue]="'value'" [showClear]="true" placeholder="Grafik Türünü Seçiniz." />
+            <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('widgetType')?.invalid">Bu alan
+              gerekli.</small>
+          </div>
+          <div class="field">
+            <label for="query">Sorgu</label>
+            <textarea id="query" placeholder="Sorgu Giriniz." name="query" [autoResize]="true" pInputTextarea
+              formControlName="query"
+              [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('query')?.invalid }"></textarea>
+            <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('query')?.invalid">Bu alan gerekli.</small>
+          </div>
+          <div class="field">
+            <label for="cachingTime">Önbellek Zamanı</label>
+            <p-inputNumber id="cachingTime" name="cachingTime" inputId="cachingTime" formControlName="cachingTime"
+              [showButtons]="true" [min]="0"
+              [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('cachingTime')?.invalid }" />
+            <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('cachingTime')?.invalid">Bu alan
+              gerekli.</small>
+          </div>
+        </form>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <button pButton pRipple label="İptal" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton pRipple label="Kaydet" icon="pi pi-check" class="p-button-text" (click)="saveItem()"
+          [disabled]="form.pristine || form.invalid"></button>
+      </ng-template>
+    </p-dialog>
+
+    <p-dialog [(visible)]="deleteItemDialog" header="Onay" [modal]="true" [style]="{ width: '450px' }">
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+        <span *ngIf="item">Bunu silmek istediğinize emin misiniz? <b>{{ item.title }}</b>?</span>
+      </div>
+      <ng-template pTemplate="footer">
+        <button pButton pRipple icon="pi pi-times" class="p-button-text" label="Hayır"
+          (click)="deleteItemDialog = false"></button>
+        <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Evet"
+          (click)="confirmDelete()"></button>
+      </ng-template>
+    </p-dialog>
+  </div>
+</div>

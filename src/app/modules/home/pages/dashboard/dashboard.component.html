@@ -1,0 +1,15 @@
+<div class="grid">
+  <div class="col-12 md:col-6" *ngFor="let widget of this.widgets">
+    <div class="card h-full" style="height: 500px;">
+      <div class="text-900 text-xl font-semibold mb-6">
+        {{ widget.title }}
+      </div>
+      <p-chart *ngIf="widget.widgetType === 'PieChart'" type="pie" [data]="widget.data" [options]="pieOptions"
+        [style]="{'height': '500px', 'width': '100%'}"></p-chart>
+      <p-chart *ngIf="widget.widgetType === 'BarChart'" type="bar" [data]="widget.data" [options]="barOptions"
+        [style]="{'height': '500px', 'min-width': '500px', 'width': '100%'}"></p-chart>
+      <list-chart *ngIf="widget.widgetType === 'ListChart' " [data]="widget.data"
+        [style]="{'height': '500px', 'width': '100%'}"></list-chart>
+    </div>
+  </div>
+</div>

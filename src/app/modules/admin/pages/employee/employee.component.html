@@ -1,0 +1,199 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card px-6 py-6">
+      <p-toast></p-toast>
+      <p-toolbar styleClass="mb-4">
+        <ng-template pTemplate="left">
+          <div class="my-2">
+            <button pButton pRipple label="" icon="pi pi-plus" class="p-button-success mr-2"
+              (click)="openNew()"></button>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="right">
+          <button pButton pRipple label="Export" icon="pi pi-upload" class="p-button-help"
+            (click)="dt.exportCSV()"></button>
+        </ng-template>
+      </p-toolbar>
+
+      <p-table #dt [value]="items" [columns]="cols" responsiveLayout="scroll" [rows]="10"
+        [globalFilterFields]="['email', 'identityNo', 'fullName', 'directorship', 'department', 'startDate', 'quitDate','managerEmployee']"
+        [rows]="10" [paginator]="true" [rowsPerPageOptions]="[10, 20, 30]" [showCurrentPageReport]="false"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [rowHover]="true"
+        [exportFilename]="'pmt_admin-' + pageHeader.replaceAll(' ', '_').toLocaleLowerCase()" [loading]="loading"
+        dataKey="id">
+        <ng-template pTemplate="caption">
+          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <h5 class="m-0">{{ pageHeader }}</h5>
+            <span class="block mt-2 md:mt-0 p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Ara..."
+                class="w-full sm:w-auto" />
+            </span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of cols" [pSortableColumn]="col.field">
+              {{ col.header }} <p-sortIcon [field]="col.field"></p-sortIcon>
+            </th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr *ngIf="!item.isRemoved">
+            <td *ngFor="let col of cols">
+              <span class="p-column-title">{{ col.header }}</span>
+              <ng-container [ngSwitch]="col.field">
+                <span *ngSwitchCase="'startDate'">
+                  <span>{{ item[col.field] | date:'dd.MM.yyyy' }} - {{ item.isQuit ? (item.quitDate ? (item.quitDate |
+                    date:'dd.MM.yyyy') : 'Bilinmiyor') : 'Halen' }}</span>
+                </span>
+                <span *ngSwitchCase="'isQuit'">
+                  <p-tag [value]="item[col.field] ? 'Ayrıldı' : 'Çalışıyor'"
+                    [severity]="item[col.field] ? 'contrast' : 'success'" [rounded]="true" />
+                </span>
+                <span *ngSwitchDefault>{{ item[col.field] }}</span>
+              </ng-container>
+            </td>
+            <td>
+              <div class="flex">
+                <button pButton pRipple icon="pi pi-pencil"
+                  class="p-button-rounded p-button-icon-only p-button-text p-button-sm mr-2"
+                  (click)="editItem(item)"></button>
+                <button pButton pRipple icon="pi pi-trash"
+                  class="p-button-rounded p-button-icon-only p-button-text p-button-sm"
+                  (click)="deleteItem(item)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p-dialog (onHide)="hideDialog()" [(visible)]="itemDialog" [style]="{ width: '850px' }"
+      [header]="item.id ? 'Düzenle' : 'Oluştur'" [modal]="true" class="p-fluid">
+      <ng-template pTemplate="content">
+        <form [formGroup]="form">
+          <div *ngIf="item.id" class="field">
+            <label for="id">Id</label>
+            <input type="id" pInputText id="id" name="id" formControlName="id" />
+          </div>
+          <div class="grid">
+            <div class="field col-6">
+              <label for="isQuit">Durum</label>
+              <p-selectButton (onChange)="quitValidator()" id="isQuit" [options]="stateOptions" formControlName="isQuit"
+                optionLabel="label" optionValue="value" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('isQuit')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div *ngIf="form.get('isQuit')?.value" class="field col-6">
+              <label for="quitDate">Ayrılma Tarihi</label>
+              <p-calendar placeholder="Ayrılma tarihini giriniz" dateFormat="dd.mm.yy" [showButtonBar]="true"
+                appendTo="body" formControlName="quitDate" [showIcon]="true"></p-calendar>
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('quitDate')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="email">E-Posta Adresi</label>
+              <span class="p-inputgroup">
+                <input type="text" placeholder="E-Posta adresini giriniz" pInputText id="email" name="email"
+                  formControlName="email"
+                  [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('email')?.invalid }" />
+                <span class="p-inputgroup-addon">&#64;orioninc.com</span>
+              </span>
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('email')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="identityNo">Kimlik Numarası</label>
+              <input type="text" placeholder="Kimlik numarasını giriniz" pInputText id="identityNo" name="identityNo"
+                formControlName="identityNo"
+                [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('identityNo')?.invalid }" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('identityNo')?.invalid">Bu alan
+                gerekli.</small>
+              <small class="ng-dirty ng-invalid"
+                *ngIf="form.get('identityNo')?.dirty && form.get('identityNo')?.invalid">
+                11 karakterden oluşmalı.</small>
+            </div>
+            <div class="field col-6">
+              <label for="firstName">Ad</label>
+              <input type="text" placeholder="Adı giriniz" pInputText id="firstName" name="firstName"
+                formControlName="firstName"
+                [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('firstName')?.invalid }" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('firstName')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="midName">İkinci Ad</label>
+              <input type="text" placeholder="Varsa ikinci adı giriniz" pInputText id="midName" name="midName"
+                formControlName="midName"
+                [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('midName')?.invalid }" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('midName')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="lastName">Soyad</label>
+              <input type="text" placeholder="Soyadı giriniz" pInputText id="lastName" name="lastName"
+                formControlName="lastName"
+                [ngClass]="{ 'ng-invalid ng-dirty': submitted && form.get('lastName')?.invalid }" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('lastName')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="directorshipId">Direktörlük</label>
+              <p-dropdown formControlName="directorshipId" [appendTo]="'body'"
+                [options]="(directorShipList$ | async) || []" optionLabel="title" optionValue="id" [filter]="true"
+                [showClear]="true" placeholder="Direktörlük Seçiniz" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('directorshipId')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="departmentId">Departman</label>
+              <p-dropdown formControlName="departmentId" [appendTo]="'body'" [options]="(departmentList$ | async) || []"
+                optionLabel="title" optionValue="id" [filter]="true" [showClear]="true"
+                placeholder="Departman Seçiniz" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('departmentId')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="startDate">İşe Başlama Tarihi</label>
+              <p-calendar placeholder="İşe başlama tarihi giriniz" dateFormat="dd.mm.yy" [showButtonBar]="true"
+                appendTo="body" formControlName="startDate" [showIcon]="true"
+                [inputStyleClass]="submitted && form.get('startDate')?.invalid ? 'ng-invalid ng-dirty' : ''"></p-calendar>
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('startDate')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+            <div class="field col-6">
+              <label for="managerEmployeeId">Yönetici</label>
+              <p-dropdown formControlName="managerEmployeeId" [appendTo]="'body'"
+                [options]="(employeeManagerList$ | async | managerEmployee) || []" [group]="true" [filter]="true"
+                [showClear]="true" placeholder="Yönetici seçiniz" />
+              <small class="ng-dirty ng-invalid" *ngIf="submitted && form.get('managerEmployeeId')?.invalid">Bu alan
+                gerekli.</small>
+            </div>
+          </div>
+        </form>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <button pButton pRipple label="İptal" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton pRipple label="Kaydet" icon="pi pi-check" class="p-button-text" (click)="saveItem()"
+          [disabled]="form.pristine || form.invalid"></button>
+      </ng-template>
+    </p-dialog>
+
+    <p-dialog [(visible)]="deleteItemDialog" header="Onay" [modal]="true" [style]="{ width: '450px' }">
+      <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+        <span *ngIf="item"><b>{{ item.fullName }}</b> <br />Kişisini silmek istediğinize emin misiniz?</span>
+      </div>
+      <ng-template pTemplate="footer">
+        <button pButton pRipple icon="pi pi-times" class="p-button-text" label="Hayır"
+          (click)="deleteItemDialog = false"></button>
+        <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Evet"
+          (click)="confirmDelete()"></button>
+      </ng-template>
+    </p-dialog>
+  </div>
+</div>
